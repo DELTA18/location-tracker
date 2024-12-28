@@ -3,15 +3,25 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
-const { Server } = require('socket.io');
 const http = require('http');
+const socketIo = require('socket.io');
 
 const authRoutes = require('./routes/auth');
 const locationRoutes = require('./routes/location');
 const adminRoutes = require('./routes/adminRoutes');
 
-// Initialize Express
 const app = express();
+
+// Create HTTP server to integrate with Socket.IO
+const server = http.createServer(app);
+
+// Set up Socket.IO
+const io = socketIo(server, {
+  cors: {
+    origin: 'http://localhost:5173', // Frontend URL
+    methods: ['GET', 'POST'],
+  },
+});
 
 // Middleware
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
@@ -23,31 +33,26 @@ app.use('/api/auth', authRoutes);
 app.use('/api/location', locationRoutes);
 app.use('/api/admin', adminRoutes);
 
-// Database Connection
-connectDB();
-
-// Create HTTP Server
-const server = http.createServer(app);
-
-// Initialize Socket.IO
-const io = new Server(server, {
-  cors: {
-    origin: 'http://localhost:5173', // Update with frontend URL
-    methods: ['GET', 'POST'],
-  },
-});
-
-// Socket.IO Logic
+// Socket.IO Event Handling
 io.on('connection', (socket) => {
-  console.log('A client connected:', socket.id);
+  console.log('A user connected:', socket.id);
 
+  // Listen for real-time location updates from users
+  socket.on('new-location-log', (data) => {
+    console.log('Received new location log:', data);
+    // Emit the location to all admins
+    const sendData = { userId: data.userId, location: data.location, timestamp: new Date() };
+    socket.broadcast.emit('send-new-location-log', sendData);  // Send to all other connected clients
+  });
+
+  // Handle disconnect
   socket.on('disconnect', () => {
-    console.log('A client disconnected:', socket.id);
+    console.log('User disconnected:', socket.id);
   });
 });
 
-// Export Socket.IO instance
-module.exports = io;
+// Database Connection
+connectDB();
 
 // Start Server
 const PORT = process.env.PORT || 5000;
