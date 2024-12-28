@@ -63,50 +63,55 @@ function User() {
 
   const startTracking = () => {
     setIsTracking(true);
+    console.log('Started tracking');
 
-    const id = setInterval(async () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            try {
-              await axios.post('http://localhost:5000/api/location', {
-                userId: user._id,
-                location: {
-                  latitude: position.coords.latitude,
-                  longitude: position.coords.longitude,
-                },
-              });
+    // const id = setInterval(async () => {
+    //   if (navigator.geolocation) {
+    //     navigator.geolocation.getCurrentPosition(
+    //       async (position) => {
+    //         try {
+    //           await axios.post('http://localhost:5000/api/location', {
+    //             userId: user._id,
+    //             location: {
+    //               latitude: position.coords.latitude,
+    //               longitude: position.coords.longitude,
+    //             },
+    //           });
 
-              socket.emit('new-location-log', { 
-                userId: user._id,
-                location: {
-                  latitude: position.coords.latitude,
-                  longitude: position.coords.longitude,
-                },
-               });
-              setLocation(position.coords);
-              console.log('Location sent to backend', position.coords);
-            } catch (error) {
-              console.error('Error sending location:', error);
-            }
-          },
-          (error) => console.error('Error getting location:', error),
-          {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0,
-          }
-        );
-      } else {
-        console.error('Geolocation is not supported by this browser.');
-      }
-    }, 4000);
+    //           socket.emit('new-location-log', { 
+    //             userId: user._id,
+    //             location: {
+    //               latitude: position.coords.latitude,
+    //               longitude: position.coords.longitude,
+    //             },
+    //            });
+    //           setLocation(position.coords);
+    //           console.log('Location sent to backend', position.coords);
+    //         } catch (error) {
+    //           console.error('Error sending location:', error);
+    //         }
+    //       },
+    //       (error) => console.error('Error getting location:', error),
+    //       {
+    //         enableHighAccuracy: true,
+    //         timeout: 5000,
+    //         maximumAge: 0,
+    //       }
+    //     );
+    //   } else {
+    //     console.error('Geolocation is not supported by this browser.');
+    //   }
+    // }, 4000);
 
-    setTimeout(() => {
-      clearInterval(id);
-      setIsTracking(false);
-    }, 60000);
+    // setTimeout(() => {
+    //   clearInterval(id);
+    //   setIsTracking(false);
+    // }, 60000);
   };
+
+  if (isTracking) {
+    socket.emit('user-online', { userId: user._id });
+  }
 
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
@@ -178,13 +183,16 @@ function User() {
           >
             {isTracking ? 'Tracking...' : 'Start Tracking'}
           </Button>
+          <Button
+            variant="contained"
+            color="secondary">stop tracking</Button>
           {location && (
             <Box sx={{ mt: 3 }}>
               <Typography variant="h6" gutterBottom>
                 Current Location
               </Typography>
               <Typography variant="body2">
-                Current Time: {new Date(location.timestamp).toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })}
+                Current Time: {new Date().toLocaleString()}
               </Typography>
               <Typography variant="body2">Latitude: {location.latitude}</Typography>
               <Typography variant="body2">Longitude: {location.longitude}</Typography>
@@ -205,7 +213,7 @@ function User() {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         TransitionComponent={Slide}
       >
-        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+        <Alert onClose={handleCloseSnackbar} variant='filled' severity={snackbar.severity} sx={{ width: '100%' }}>
           {snackbar.message}
         </Alert>
       </Snackbar>
