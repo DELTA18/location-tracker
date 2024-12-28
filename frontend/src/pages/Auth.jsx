@@ -48,8 +48,8 @@ function Auth() {
         password: credentials.password,
       });
       const userId = response.data.user._id;
-      triggerSnackbar('Logged in successfully!', 'success');
       navigate('/home', { state: { userId } });
+      triggerSnackbar('Logged in successfully!', 'success');
     } catch (error) {
       triggerSnackbar(error.response?.data?.message || 'Failed to login', 'error');
     }
@@ -98,7 +98,6 @@ function Auth() {
         </Stack>
       </Paper>
 
-      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}

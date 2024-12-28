@@ -19,9 +19,7 @@ function Admin() {
       });
 
       if (response.status === 200) {
-        setIsLoggedIn(true);
-        console.log('Admin logged in successfully');
-        alert('Admin logged in successfully');
+        setIsLoggedIn(true);;
         navigate('/admin/dashboard');
         setError('');
       }

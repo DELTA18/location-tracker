@@ -4,13 +4,15 @@ import io from 'socket.io-client';
 import axios from 'axios';
 import { Box, Typography, Button, Paper } from '@mui/material';
 
-const socket = io('http://localhost:5000');
+const BACKENDURI = import.meta.env.VITE_BACKENDURI || 'http://localhost:5000'
+const socket = io(BACKENDURI);
 
 function Home() {
   const location = useLocation();
-  const userId = location.state?.userId; // Access userId passed from Auth.js
+  const userId = location.state?.userId; 
   const [isTracking, setIsTracking] = useState(false);
   const [locationData, setLocationData] = useState(null);
+  const [intervalId, setIntervalId] = useState(null);  
 
   useEffect(() => {
     if (!userId) {
@@ -20,50 +22,56 @@ function Home() {
 
   const startTracking = () => {
     if (!userId) return;
-    if (isTracking){
-        socket.emit('user-offline', { userId });
-        setIsTracking(false);
-    }
-    else{
-        setIsTracking(true);
-        socket.emit('user-online', { userId });
-    }
-   
-    const id = setInterval(async () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            try {
-              const data = {
-                userId,
-                location: {
-                  latitude: position.coords.latitude,
-                  longitude: position.coords.longitude,
-                },
-              };
-              await axios.post('http://localhost:5000/api/location', data);
-              socket.emit('new-location-log', data);
-              setLocationData(position.coords);
-              console.log('Location sent to backend', position.coords);
-            } catch (error) {
-              console.error('Error sending location:', error);
-            }
-          },
-          (error) => console.error('Error getting location:', error),
-          {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0,
-          }
-        );
-      }
-    }, 4000);
 
-    setTimeout(() => {
-      clearInterval(id);
-      setIsTracking(false);
+    if (isTracking) {
+      // Stop tracking
       socket.emit('user-offline', { userId });
-    }, 60000);
+      setIsTracking(false);
+      clearInterval(intervalId); // Clear the interval when stopping
+      setIntervalId(null);  // Reset the interval ID
+    } else {
+      // Start tracking
+      setIsTracking(true);
+      socket.emit('user-online', { userId });
+
+      const newIntervalId = setInterval(async () => {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              try {
+                const data = {
+                  userId,
+                  location: {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                  },
+                };
+                await axios.post(`${BACKENDURI}/api/location`, data);
+                socket.emit('new-location-log', data);
+                setLocationData(position.coords);
+              } catch (error) {
+                console.error('Error sending location:', error);
+              }
+            },
+            (error) => console.error('Error getting location:', error),
+            {
+              enableHighAccuracy: true,
+              timeout: 5000,
+              maximumAge: 0,
+            }
+          );
+        }
+      }, 4000); // Continue sending location every 4 seconds
+
+      setIntervalId(newIntervalId);  // Store the interval ID in state
+
+      // Stop tracking after 1 minute
+      setTimeout(() => {
+        clearInterval(newIntervalId);
+        setIsTracking(false);
+        socket.emit('user-offline', { userId });
+      }, 60000); // Automatically stop after 1 minute
+    }
   };
 
   return (
@@ -76,7 +84,6 @@ function Home() {
           variant="contained"
           color={isTracking ? 'secondary' : 'primary'}
           onClick={startTracking}
-        //   disabled={isTracking}
           fullWidth
         >
           {isTracking ? 'Stop Tracking' : 'Start Tracking'}
@@ -88,6 +95,7 @@ function Home() {
             </Typography>
             <Typography variant="body2">Latitude: {locationData.latitude}</Typography>
             <Typography variant="body2">Longitude: {locationData.longitude}</Typography>
+            <Typography variant="body2">Timestamp: {new Date().toLocaleString()}</Typography>
           </Box>
         )}
       </Paper>

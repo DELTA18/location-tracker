@@ -11,7 +11,6 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({message: "Please enter the Credentials"})
   }
   try {
-    // Check if username or email already exists
     const existingUser = await User.findOne({ 
       $or: [ { username }, { email } ] 
     });

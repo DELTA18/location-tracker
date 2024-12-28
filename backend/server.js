@@ -4,18 +4,15 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const http = require('http');
-const { initSocket } = require('./socket'); // Import socket.js
+const { initSocket } = require('./socket'); 
 
 const authRoutes = require('./routes/auth');
 const locationRoutes = require('./routes/location');
 const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
-
-// Create HTTP server to integrate with Socket.IO
 const server = http.createServer(app);
 
-// Initialize Socket.IO
 initSocket(server);
 
 // Middleware

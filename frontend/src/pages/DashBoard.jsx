@@ -6,7 +6,8 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import "leaflet/dist/leaflet.css";
 import jsPDF from 'jspdf';
 
-const socket = io('http://localhost:5000');
+const BACKENDURI = import.meta.env.VITE_BACKENDURI || 'http://localhost:5000'
+const socket = io(BACKENDURI);
 
 function Dashboard() {
   const [users, setUsers] = useState([]);
@@ -22,7 +23,7 @@ function Dashboard() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/admin/users');
+        const response = await axios.get(`${BACKENDURI}/api/admin/users`);
         setUsers(response.data);
 
         // Initialize user statuses
@@ -59,7 +60,7 @@ function Dashboard() {
   // Fetch logs for a specific user
   const fetchUserLogs = async (userId, userName) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/admin/users/${userId}/logs`);
+      const response = await axios.get(`${BACKENDURI}/api/admin/users/${userId}/logs`);
       setSelectedUserLogs(response.data);
       setSelectedUserName(userName);
       setSelectedUserId(userId);
