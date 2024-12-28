@@ -10,10 +10,11 @@ function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const navigate = useNavigate();
+  const BACKENDURI = import.meta.env.VITE_BACKENDURI || 'http://localhost:5000'
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/api/admin/login', {
+      const response = await axios.post(`${BACKENDURI}/api/admin/login`, {
         username,
         password,
       });

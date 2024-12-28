@@ -25,6 +25,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/location', locationRoutes);
 app.use('/api/admin', adminRoutes);
 
+app.get('/', (req, res) => res.send('Hello World!'));
 // Database Connection
 connectDB();
 

@@ -20,6 +20,8 @@ function Auth() {
 
   const navigate = useNavigate();
 
+  const BACKENDURI = import.meta.env.VITE_BACKENDURI || 'http://localhost:5000'
+
   const handleInputChange = (e) => {
     setCredentials({ ...credentials, [e.target.name]: e.target.value });
   };
@@ -34,7 +36,7 @@ function Auth() {
 
   const handleRegister = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', credentials);
+      const response = await axios.post(`${BACKENDURI}/api/auth/register`, credentials);
       triggerSnackbar('Registered successfully!', 'success');
     } catch (error) {
       triggerSnackbar(error.response?.data?.message || 'Failed to register', 'error');
@@ -43,7 +45,7 @@ function Auth() {
 
   const handleLogin = async () => {
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
+      const response = await axios.post(`${BACKENDURI}/api/auth/login`, {
         username: credentials.username,
         password: credentials.password,
       });
