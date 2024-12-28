@@ -40,15 +40,16 @@ router.post('/register', async (req, res) => {
 
 // Login
 router.post('/login', async (req, res) => {
+  console.log('in login')
   const { username, password } = req.body;
-
+  console.log(req.body)
   try {
     const user = await User.findOne({ username });
     if (!user) return res.status(400).json({ message: 'Invalid username or password' });
 
     const isValid = await user.isValidPassword(password);
     if (!isValid) return res.status(400).json({ message: 'Invalid username or password' });
-
+    console.log('success')
     res.status(200).json({ user });
   } catch (error) {
     console.error('Error logging in:', error);
